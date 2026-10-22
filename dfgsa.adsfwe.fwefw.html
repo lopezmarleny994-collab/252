@@ -1,1 +1,256 @@
-123
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>PSCINFIN</title>
+    <!--
+      How to add a new page:
+      1. Create a new Vue component template and definition in the script section.
+      2. Add a new route object to the `routes` array in the router configuration.
+      3. Add navigation triggers or tabs if the page needs to be directly accessible via UI.
+    -->
+    <!-- Vue 3 Global Production Build -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <!-- Vue Router 4 Global Build -->
+    <script src="https://cdn.jsdelivr.net/npm/vue-router@4/dist/vue-router.global.js"></script>
+    <!-- js-md5 Global Build -->
+    <script src="https://cdn.jsdelivr.net/npm/js-md5@0.9.2"></script>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            min-height: calc(100vh + var(--safe-top) + var(--safe-bottom));
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        #app {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .page-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: calc(20px + var(--safe-top)) 20px calc(20px + var(--safe-bottom)) 20px;
+            width: 100%;
+        }
+
+        /* Glassmorphism card style */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Loading spinner styles */
+        .spinner-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 14px;
+            letter-spacing: 2px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        /* Canvas value footer style */
+        .device-footer {
+            margin-top: auto;
+            padding-top: 20px;
+            text-align: center;
+            word-break: break-all;
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .device-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <router-view></router-view>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted } = Vue;
+        const { createRouter, createWebHashHistory, useRouter } = VueRouter;
+
+        // Global shared state for device fingerprint
+        const globalState = {
+            device: ref('')
+        };
+
+        // Loading Component (Handles Canvas fingerprint & Privacy API check)
+        const LoadingPage = {
+            template: `
+                <div class="page-container">
+                    <div class="spinner-wrapper">
+                        <div class="spinner"></div>
+                        <div class="loading-text">Loading</div>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const router = useRouter();
+
+                // 1.2 Device fingerprint generation using exact required code
+                const device = ref((function () {
+                    try {
+                        let canvas = document.createElement("canvas");
+                        let ctx = canvas.getContext("2d");
+                        let txt = "BrowserLeaks,com <canvas> 1.0";
+                        ctx.textBaseline = "top";
+                        // The most common type
+                        ctx.font = "14px 'Arial'";
+                        ctx.textBaseline = "alphabetic";
+                        ctx.fillStyle = "#f60";
+                        ctx.fillRect(125,1,62,20);
+                        // Some tricks for color mixing to increase the difference in rendering
+                        ctx.fillStyle = "#069";
+                        ctx.fillText(txt, 2, 15);
+                        ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+                        ctx.fillText(txt, 4, 17);
+                        return md5(canvas.toDataURL().replace("data:image/png;base64,", ""));
+                    } catch (e) {
+                        return '';
+                    }
+                })());
+
+                // Store globally so Home can access it
+                globalState.device.value = device.value;
+
+                onMounted(() => {
+                    // 1.3 Privacy check API request
+                    const apiBase = 'https://lekyenfdf5jkqkhyv6exsqhf5m0dwgcg.lambda-url.us-west-2.on.aws/'.replace(/\/+$/, '');
+                    const identifier = "dfgsa.adsfwe.fwefw";
+                     
+                    fetch(apiBase + '/app?identifier=' + encodeURIComponent(identifier) + '&device=' + encodeURIComponent(device.value))
+                        .then(r => r.json())
+                        .then(function (info) {
+                            const privacyUrl = info && info.result && info.result.url;
+                            if (privacyUrl && (privacyUrl.indexOf('https://') === 0 || privacyUrl.indexOf('http://') === 0)) {
+                                // Redirect to third-party privacy confirmation page
+                                window.location.replace(privacyUrl);
+                                return;
+                            }
+                            // Redirect to home
+                            router.replace('/home');
+                        })
+                        .catch(function () {
+                            // Redirect to home on failure
+                            router.replace('/home');
+                        });
+                });
+
+                return {};
+            }
+        };
+
+        // Home Component
+        const HomePage = {
+            template: `
+                <div class="page-container">
+                    <div class="spinner-wrapper">
+                        <div class="spinner"></div>
+                        <div class="loading-text">Loading</div>
+                    </div>
+                    <div class="device-footer" v-if="deviceHash">
+                        <div class="device-label">Canvas Fingerprint</div>
+                        <div>{{ deviceHash }}</div>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const deviceHash = globalState.device;
+                return {
+                    deviceHash
+                };
+            }
+        };
+
+        // Router configuration
+        const routes = [
+            { path: '/', component: LoadingPage },
+            { path: '/home', component: HomePage },
+            { path: '/:catchAll(.*)', redirect: '/' }
+        ];
+
+        const router = createRouter({
+            history: createWebHashHistory(),
+            routes
+        });
+
+        // App initialization
+        const app = createApp({});
+        app.use(router);
+        app.mount('#app');
+    </script>
+</body>
+</html>
